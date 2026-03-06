@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expense Summary</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Expense Summary</h1>
+    <form method="post">
+        Start Date: <input type="date" name="start_date" value="{{ start_date }}"><br>
+        End Date: <input type="date" name="end_date" value="{{ end_date }}"><br>
+        <input type="submit" value="Filter">
+    </form>
+    <h2>Total: ${{ "%.2f"|format(total) }}</h2>
+    <h3>By Category:</h3>
+    <ul>
+        {% for cat in by_category %}
+        <li>{{ cat[0] }}: ${{ "%.2f"|format(cat[1]) }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('index') }}">Back</a>
+</body>
+</html>
