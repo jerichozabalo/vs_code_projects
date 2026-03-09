@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Knowledge Base</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Your Knowledge Base</h1>
+    <a href="/add">Add New Knowledge</a> | <a href="/generate">Generate Content</a>
+    <ul>
+        {% for item in items %}
+        <li>
+            <strong>{{ item[1] }}</strong> ({{ item[4] }})<br>
+            <em>Source: {{ item[3] }}</em><br>
+            {{ item[2][:200] }}... <small>Added: {{ item[5] }}</small>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

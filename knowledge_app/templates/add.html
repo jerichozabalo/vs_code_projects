@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Knowledge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Add Knowledge Item</h1>
+    <form method="post" enctype="multipart/form-data">
+        <label>Title: <input name="title" required></label><br>
+        <label>Content: <textarea name="content" rows="10" placeholder="Or upload a file below"></textarea></label><br>
+        <label>Upload File (.txt or .pdf): <input type="file" name="file" accept=".txt,.pdf"></label><br>
+        <label>Source: <input name="source" placeholder="e.g., Book: Atomic Habits"></label><br>
+        <label>Category:
+            <select name="category" required>
+                <option value="influential_writing">Influential Writing</option>
+                <option value="narratives">Narratives</option>
+            </select>
+        </label><br>
+        <button type="submit">Add</button>
+    </form>
+    <a href="/">Back to List</a>
+</body>
+</html>

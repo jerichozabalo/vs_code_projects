@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd \"c:\\\\Users\\\\Jericho\\\\vs_code_projects\\\\pokemon-game\\\\src\" ; python -c \"import sys; sys\\.path\\.insert\\(0, '\\.'\\); from pokemon import Pokemon; print\\('Pokemon module loaded successfully'\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

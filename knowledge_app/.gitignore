@@ -1,0 +1,23 @@
+# Virtual environment
+venv/
+*.pyc
+__pycache__/
+
+# Database
+*.db
+data/
+
+# Large model files
+models/
+*.bin
+*.safetensors
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

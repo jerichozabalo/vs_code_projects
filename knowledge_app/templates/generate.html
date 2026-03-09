@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Social Media Content</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Generate Content</h1>
+    <form method="post">
+        <label>Query: <input name="query" placeholder="e.g., Tips for building influence" required></label><br>
+        <label>Platform:
+            <select name="platform" required>
+                <option value="Facebook">Facebook</option>
+                <option value="YouTube">YouTube</option>
+            </select>
+        </label><br>
+        <label>Filter by Category (optional):
+            <select name="category">
+                <option value="">All</option>
+                <option value="influential_writing">Influential Writing</option>
+                <option value="narratives">Narratives</option>
+            </select>
+        </label><br>
+        <button type="submit">Generate</button>
+    </form>
+    {% if result %}
+    <h2>Generated {{ platform }} Content:</h2>
+    <pre>{{ result }}</pre>  <!-- Pre for formatting -->
+    {% endif %}
+    <a href="/">Back to List</a>
+</body>
+</html>

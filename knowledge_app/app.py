@@ -1,0 +1,151 @@
+from flask import Flask, render_template, request, redirect, url_for, flash
+import sqlite3
+from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
+from PyPDF2 import PdfReader
+from langchain_huggingface import HuggingFacePipeline
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_text_splitters import CharacterTextSplitter
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from config import DATABASE, SECRET_KEY, DEBUG, MODEL_NAME, EMBEDDING_MODEL
+
+app = Flask(__name__)
+app.secret_key = SECRET_KEY
+
+def init_db():
+    os.makedirs('data', exist_ok=True)
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS knowledge_items (
+            id INTEGER PRIMARY KEY,
+            title TEXT,
+            content TEXT,
+            source TEXT,
+            category TEXT,
+            date_added TEXT
+        )
+    ''')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_content ON knowledge_items(content)')
+    conn.commit()
+    conn.close()
+
+def get_knowledge_items(category=None):
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    if category:
+        cursor.execute('SELECT id, title, content, source, category, date_added FROM knowledge_items WHERE category=? ORDER BY date_added DESC', (category,))
+    else:
+        cursor.execute('SELECT id, title, content, source, category, date_added FROM knowledge_items ORDER BY date_added DESC')
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
+def add_knowledge_item(title, content, source, category):
+    date_added = datetime.now().strftime('%Y-%m-%d')
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO knowledge_items (title, content, source, category, date_added) VALUES (?, ?, ?, ?, ?)',
+                   (title, content, source, category, date_added))
+    conn.commit()
+    conn.close()
+
+# Load local model (global for reuse)
+print("Loading AI model... (this may take a moment)")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, device_map="auto")
+pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=500, temperature=0.7)
+llm = HuggingFacePipeline(pipeline=pipe)
+print("✓ Model loaded successfully!")
+
+def build_knowledge_base(category=None):
+    """Build FAISS vectorstore from knowledge items"""
+    items = get_knowledge_items(category)
+    if not items:
+        return None
+    texts = [f"{item[1]} ({item[4]}): {item[2]}" for item in items]  # title (category): content
+    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    docs = text_splitter.create_documents(texts)
+    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    vectorstore = FAISS.from_documents(docs, embeddings)
+    return vectorstore
+
+def generate_social_content(query, platform, category=None):
+    """Generate content using retrieved knowledge"""
+    vectorstore = build_knowledge_base(category)
+    if vectorstore is None:
+        return "No knowledge items available. Please add some knowledge first!"
+    
+    # Retrieve relevant documents
+    docs = vectorstore.similarity_search(query, k=3)
+    context = "\n".join([doc.page_content for doc in docs])
+    
+    # Build prompt
+    base_prompt = f"Based on the following knowledge base:\n\n{context}\n\n"
+    base_prompt += f"Generate {platform} content for: {query}. "
+    if platform == "Facebook":
+        base_prompt += "Make it a short, engaging post (100-200 words) with emojis, hashtags, and a call-to-action."
+    elif platform == "YouTube":
+        base_prompt += "Make it a video script (500-1000 words) with intro, body, outro, and timestamps (e.g., [0:00] Intro)."
+    
+    # Generate
+    response = llm(base_prompt)
+    return response
+
+@app.route('/')
+def index():
+    items = get_knowledge_items()
+    return render_template('index.html', items=items)
+
+@app.route('/add', methods=['GET', 'POST'])
+def add():
+    if request.method == 'POST':
+        title = request.form['title']
+        content = request.form['content']
+        source = request.form['source']
+        category = request.form['category']
+        
+        # Handle file upload
+        file = request.files.get('file')
+        if file and file.filename:
+            filename = secure_filename(file.filename)
+            if filename.endswith('.txt'):
+                file_content = file.read().decode('utf-8')
+            elif filename.endswith('.pdf'):
+                pdf_reader = PdfReader(file)
+                file_content = ""
+                for page in pdf_reader.pages:
+                    file_content += page.extract_text() + "\n"
+            else:
+                flash('Only .txt and .pdf files are supported!')
+                return redirect(url_for('add'))
+            
+            if not content:  # If no manual content, use file content
+                content = file_content
+            else:  # Append file content to manual content
+                content += "\n\n" + file_content
+        
+        if not content:
+            flash('Please provide content or upload a file!')
+            return redirect(url_for('add'))
+        
+        add_knowledge_item(title, content, source, category)
+        flash('Knowledge added successfully!')
+        return redirect(url_for('index'))
+    return render_template('add.html')
+
+@app.route('/generate', methods=['GET', 'POST'])
+def generate():
+    if request.method == 'POST':
+        query = request.form['query']
+        platform = request.form['platform']
+        category = request.form.get('category')  # Optional filter
+        result = generate_social_content(query, platform, category)
+        return render_template('generate.html', query=query, platform=platform, result=result)
+    return render_template('generate.html')
+
+if __name__ == '__main__':
+    init_db()
+    app.run(debug=DEBUG)
