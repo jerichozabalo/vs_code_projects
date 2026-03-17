@@ -1,0 +1,30 @@
+============================================================
+CRB-SAASANT RECONCILIATION SUMMARY
+============================================================
+
+Report generated: 2026-03-17 15:26:11
+
+RECONCILIATION STATISTICS:
+----------------------------------------
+Total CRB records: 3465
+Total saasant records: 4823
+Total matches: 1036
+  Level 1 matches (Reference No): 1023
+  Level 2 matches (Customer+Total): 13
+Unmatched CRB records: 2429
+Unmatched saasant records: 3787
+
+Overall match rate: 29.9%
+
+MATCHING CRITERIA:
+----------------------------------------
+1. Level 1: Reference No (saasant) <-> NO (CRB)
+2. Level 2: Customer (saasant) + Total (saasant) <-> CLIENT_NAME + TOTAL_AMOUNT (CRB)
+
+OUTPUT FILES:
+----------------------------------------
+1. CRB matched data: output\crb_reconciled.csv
+2. Saasant matched data: output\saasant_reconciled.csv
+3. Matched pairs: output\reconciliation_matched_pairs.csv
+4. Unmatched CRB: output\reconciliation_unmatched_crb.csv
+5. Unmatched saasant: output\reconciliation_unmatched_saasant.csv
