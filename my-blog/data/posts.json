@@ -1,0 +1,14 @@
+[
+  {
+    "id": "1",
+    "title": "My First Blog Post",
+    "date": "2023-10-26",
+    "content": "<p>This is the <strong>first paragraph</strong> of my first blog post. It contains some <em>sample content</em>.</p><p>This is the second paragraph, demonstrating more content with <a href=\"#\">a link</a>.</p>"
+  },
+  {
+    "id": "2",
+    "title": "Is this my first blog post?",
+    "date": "2024-03-14",
+    "content": "<p>Next.js 16 introduces some <strong>amazing features</strong> for developers. The App Router and Turbopack make development faster than ever.</p><p>In this post, we explore how to build a blog with Tailwind CSS and TypeScript.</p>"
+  }
+]

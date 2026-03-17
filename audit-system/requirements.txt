@@ -1,0 +1,3 @@
+# Requirements for Audit System
+pandas
+openpyxl
